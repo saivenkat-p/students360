@@ -18,7 +18,7 @@ def seed_db():
 
     db: Session = SessionLocal()
     try:
-        print("🌱 Seeding Student360 Database...")
+        print("Seeding Student360 Database...")
 
         # 1. Create Default Teacher User
         teacher_user = User(
@@ -119,7 +119,7 @@ def seed_db():
             db.add(enr)
         db.commit()
 
-        print(f"  ✓ Seeded {len(db_students)} Students")
+        print(f"  - Seeded {len(db_students)} Students")
 
         # 4. Create Activities for A. Ravi (Featured Student in UI)
         ravi = db_students[0] # A. Ravi
@@ -369,7 +369,7 @@ def seed_db():
             db.add(o_act)
 
         db.commit()
-        print("  ✓ Seeded Student Activities & Progress Stats")
+        print("  - Seeded Student Activities & Progress Stats")
 
         # 5. Seed Attendance Data
         dates = ["10/05/2025", "11/05/2025", "12/05/2025", "13/05/2025"]
@@ -389,7 +389,7 @@ def seed_db():
                     status=att_status
                 ))
         db.commit()
-        print("  ✓ Seeded Attendance Records")
+        print("  - Seeded Attendance Records")
 
         # 6. Seed Materials (Exact list from Reference UI Screen 5)
         materials_data = [
@@ -466,7 +466,7 @@ def seed_db():
             )
             db.add(mat)
         db.commit()
-        print("  ✓ Seeded Learning Materials")
+        print("  - Seeded Learning Materials")
 
         # 7. Seed Notifications
         notifications_data = [
@@ -483,12 +483,12 @@ def seed_db():
                 is_read=False
             ))
         db.commit()
-        print("  ✓ Seeded Notifications")
+        print("  - Seeded Notifications")
 
-        print("🎉 Database seeding completed successfully!")
+        print("Database seeding completed successfully!")
 
     except Exception as e:
-        print(f"❌ Error seeding database: {e}")
+        print(f"Error seeding database: {e}")
         db.rollback()
         raise e
     finally:

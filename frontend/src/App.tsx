@@ -1,122 +1,131 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
-import './App.css'
+import React, { useState, useEffect } from 'react';
+import { Dashboard } from './pages/Dashboard';
+import { Students } from './pages/Students';
+import { StudentProfile } from './pages/StudentProfile';
+import { Materials } from './pages/Materials';
+import { Reports } from './pages/Reports';
+import { BottomNav } from './components/layout/BottomNav';
+import { QuickAddMenuModal } from './components/forms/QuickAddMenuModal';
+import { AddSeminarModal } from './components/forms/AddSeminarModal';
+import { Student } from './types';
+import { api } from './services/api';
 
-function App() {
-  const [count, setCount] = useState(0)
+export function App() {
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'students' | 'materials' | 'reports'>('dashboard');
+  const [selectedStudentId, setSelectedStudentId] = useState<number | null>(null);
+  const [students, setStudents] = useState<Student[]>([]);
+
+  // Modals
+  const [isQuickMenuOpen, setIsQuickMenuOpen] = useState(false);
+  const [isSeminarModalOpen, setIsSeminarModalOpen] = useState(false);
+
+  useEffect(() => {
+    async function fetchStudents() {
+      try {
+        const data = await api.getStudents();
+        setStudents(data);
+      } catch (err) {
+        console.error('Failed to fetch students:', err);
+      }
+    }
+    fetchStudents();
+  }, []);
+
+  const handleSelectStudent = (id: number) => {
+    setSelectedStudentId(id);
+  };
+
+  const handleOpenAction = (action: string) => {
+    if (action === 'seminar') {
+      setIsSeminarModalOpen(true);
+    } else if (action === 'students') {
+      setActiveTab('students');
+      setSelectedStudentId(null);
+    } else if (action === 'reports') {
+      setActiveTab('reports');
+    } else if (action === 'material') {
+      setActiveTab('materials');
+    } else {
+      setIsSeminarModalOpen(true);
+    }
+  };
+
+  const renderCurrentView = () => {
+    if (selectedStudentId !== null) {
+      return (
+        <StudentProfile
+          studentId={selectedStudentId}
+          onBack={() => setSelectedStudentId(null)}
+        />
+      );
+    }
+
+    switch (activeTab) {
+      case 'dashboard':
+        return (
+          <Dashboard
+            onOpenAction={handleOpenAction}
+            onSelectStudent={handleSelectStudent}
+          />
+        );
+      case 'students':
+        return (
+          <Students
+            onSelectStudent={handleSelectStudent}
+            onAddStudent={() => setIsSeminarModalOpen(true)}
+          />
+        );
+      case 'materials':
+        return <Materials onUploadClick={() => setIsSeminarModalOpen(true)} />;
+      case 'reports':
+        return <Reports />;
+      default:
+        return <Dashboard onOpenAction={handleOpenAction} onSelectStudent={handleSelectStudent} />;
+    }
+  };
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.tsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
+    <div className="min-h-screen bg-slate-950 flex items-center justify-center p-0 md:py-6">
+      {/* Outer Device Shell / Frame */}
+      <div className="mobile-frame rounded-none md:rounded-[40px] overflow-hidden border-0 md:border-[10px] md:border-slate-800 shadow-2xl relative flex flex-col w-full max-w-[480px]">
+        
+        {/* Main Content Area */}
+        <main className="flex-1 overflow-y-auto bg-slate-50">
+          {renderCurrentView()}
+        </main>
 
-      <div className="ticks"></div>
+        {/* Bottom Navigation */}
+        <BottomNav
+          activeTab={activeTab}
+          onSelectTab={(tab) => {
+            setSelectedStudentId(null);
+            setActiveTab(tab);
+          }}
+          onOpenQuickAdd={() => setIsQuickMenuOpen(true)}
+        />
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
+        {/* Floating Quick Action Selection Modal */}
+        <QuickAddMenuModal
+          isOpen={isQuickMenuOpen}
+          onClose={() => setIsQuickMenuOpen(false)}
+          onSelectAction={handleOpenAction}
+        />
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+        {/* Add Seminar Form Modal (Screen 4 exact match) */}
+        <AddSeminarModal
+          isOpen={isSeminarModalOpen}
+          students={students}
+          onClose={() => setIsSeminarModalOpen(false)}
+          onSuccess={() => {
+            // refresh data
+            if (activeTab === 'dashboard') {
+              setActiveTab('dashboard');
+            }
+          }}
+        />
+      </div>
+    </div>
+  );
 }
 
-export default App
+export default App;

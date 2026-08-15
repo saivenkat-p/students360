@@ -1,7 +1,7 @@
 import React from 'react';
 import { 
   Mic, FileText, Lightbulb, Users, Star, 
-  BookOpen, BarChart3, UserCheck 
+  BookOpen, BarChart3, UserCheck, Calendar 
 } from 'lucide-react';
 
 interface QuickActionsGridProps {
@@ -14,6 +14,7 @@ export const QuickActionsGrid: React.FC<QuickActionsGridProps> = ({ onOpenAction
     { id: 'assignment', label: 'Add Assignment', icon: FileText, color: 'text-emerald-600 bg-emerald-50 hover:bg-emerald-100' },
     { id: 'pbl', label: 'Add PBL', icon: Lightbulb, color: 'text-amber-600 bg-amber-50 hover:bg-amber-100' },
     { id: 'pgl', label: 'Add PGL', icon: Users, color: 'text-sky-600 bg-sky-50 hover:bg-sky-100' },
+    { id: 'attendance', label: 'Attendance', icon: Calendar, color: 'text-rose-600 bg-rose-50 hover:bg-rose-100' },
     { id: 'activity', label: 'Add Activity', icon: Star, color: 'text-pink-600 bg-pink-50 hover:bg-pink-100' },
     { id: 'material', label: 'Share Material', icon: BookOpen, color: 'text-indigo-600 bg-indigo-50 hover:bg-indigo-100' },
     { id: 'reports', label: 'View Reports', icon: BarChart3, color: 'text-violet-600 bg-violet-50 hover:bg-violet-100' },

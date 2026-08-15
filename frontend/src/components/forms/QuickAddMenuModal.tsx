@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, Mic, FileText, Lightbulb, Users, Star, Calendar, BookOpen } from 'lucide-react';
+import { X, Mic, FileText, Lightbulb, Users, Star, Calendar, BookOpen, UserPlus } from 'lucide-react';
 
 interface QuickAddMenuModalProps {
   isOpen: boolean;
@@ -15,6 +15,7 @@ export const QuickAddMenuModal: React.FC<QuickAddMenuModalProps> = ({
   if (!isOpen) return null;
 
   const items = [
+    { id: 'add_student', label: 'Add New Student', icon: UserPlus, color: 'text-indigo-600 bg-indigo-100' },
     { id: 'seminar', label: 'Add Seminar', icon: Mic, color: 'text-purple-600 bg-purple-100' },
     { id: 'assignment', label: 'Add Assignment', icon: FileText, color: 'text-emerald-600 bg-emerald-100' },
     { id: 'pbl', label: 'Add PBL Project', icon: Lightbulb, color: 'text-amber-600 bg-amber-100' },
@@ -23,6 +24,7 @@ export const QuickAddMenuModal: React.FC<QuickAddMenuModalProps> = ({
     { id: 'attendance', label: 'Mark Attendance', icon: Calendar, color: 'text-indigo-600 bg-indigo-100' },
     { id: 'material', label: 'Upload Material', icon: BookOpen, color: 'text-teal-600 bg-teal-100' },
   ];
+
 
   return (
     <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-4">

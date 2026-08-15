@@ -60,15 +60,18 @@ export const Reports: React.FC = () => {
   ];
 
   return (
-    <div className="bg-slate-50 min-h-screen pb-12">
-      {/* Header Bar matching Reference UI Screen 6 */}
-      <div className="bg-indigo-600 text-white px-4 py-3.5 flex items-center justify-between shadow-md">
-        <h1 className="text-base font-bold tracking-tight">Reports</h1>
+    <div className="bg-slate-50 min-h-screen pb-12 space-y-6">
+      {/* Header Bar */}
+      <div className="bg-indigo-600 text-white p-5 rounded-2xl md:rounded-3xl shadow-md flex items-center justify-between">
+        <div>
+          <h1 className="text-lg md:text-xl font-bold tracking-tight">Academic Reports</h1>
+          <p className="text-xs text-indigo-200 mt-0.5">Generate PDF and CSV reports for students and classes</p>
+        </div>
       </div>
 
-      <div className="p-4 space-y-4">
+      <div className="space-y-6">
         {/* Tab Switcher: Student Reports vs Class Reports */}
-        <div className="flex bg-slate-200/70 p-1 rounded-2xl">
+        <div className="flex bg-slate-200/70 p-1.5 rounded-2xl max-w-sm">
           <button
             onClick={() => setActiveTab('student')}
             className={`flex-1 py-2 text-xs font-bold rounded-xl transition-all ${
@@ -91,8 +94,8 @@ export const Reports: React.FC = () => {
           </button>
         </div>
 
-        {/* List of Report Cards matching Screen 6 */}
-        <div className="space-y-2.5">
+        {/* List of Report Cards Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
           {reportItems.map((item) => {
             const Icon = item.icon;
             return (
@@ -101,14 +104,14 @@ export const Reports: React.FC = () => {
                 href={api.getClassSummaryPdfUrl()}
                 target="_blank"
                 rel="noreferrer"
-                className="bg-white p-3.5 rounded-2xl border border-slate-100 shadow-xs hover:shadow-md transition-all cursor-pointer flex items-center justify-between group block"
+                className="bg-white p-4 rounded-2xl border border-slate-100 shadow-xs hover:shadow-md transition-all cursor-pointer flex items-center justify-between group block"
               >
                 <div className="flex items-center space-x-3.5">
-                  <div className={`w-10 h-10 rounded-xl ${item.color} flex items-center justify-center shadow-xs shrink-0`}>
+                  <div className={`w-11 h-11 rounded-2xl ${item.color} flex items-center justify-center shadow-xs shrink-0`}>
                     <Icon className="w-5 h-5" />
                   </div>
                   <div>
-                    <h3 className="text-xs font-bold text-slate-800 group-hover:text-indigo-600 transition-colors">
+                    <h3 className="text-xs md:text-sm font-bold text-slate-800 group-hover:text-indigo-600 transition-colors">
                       {item.title}
                     </h3>
                     <p className="text-[11px] text-slate-400 font-medium">
@@ -123,18 +126,20 @@ export const Reports: React.FC = () => {
           })}
         </div>
 
-        {/* Primary Export All Data Button matching Screen 6 */}
-        <a
-          href={api.getExportCsvUrl()}
-          download
-          className="w-full bg-gradient-to-r from-indigo-700 via-indigo-600 to-purple-600 hover:from-indigo-800 hover:to-purple-700 text-white py-3.5 px-4 rounded-2xl font-bold shadow-lg shadow-indigo-500/25 flex items-center justify-center space-x-2 transition-all active:scale-[0.98] mt-6 block text-center"
-        >
-          <Download className="w-5 h-5" />
-          <div className="text-left">
-            <div className="text-sm font-bold leading-tight">Export All Data</div>
-            <div className="text-[10px] text-indigo-100 font-normal">Backup / Export app data (CSV)</div>
-          </div>
-        </a>
+        {/* Primary Export All Data Button */}
+        <div className="max-w-md pt-4">
+          <a
+            href={api.getExportCsvUrl()}
+            download
+            className="w-full bg-gradient-to-r from-indigo-700 via-indigo-600 to-purple-600 hover:from-indigo-800 hover:to-purple-700 text-white py-3.5 px-5 rounded-2xl font-bold shadow-lg shadow-indigo-500/25 flex items-center justify-center space-x-3 transition-all active:scale-[0.98] block text-center"
+          >
+            <Download className="w-5 h-5" />
+            <div className="text-left">
+              <div className="text-sm font-bold leading-tight">Export All Data (CSV)</div>
+              <div className="text-[10px] text-indigo-100 font-normal">Backup complete academic tracking database</div>
+            </div>
+          </a>
+        </div>
       </div>
     </div>
   );

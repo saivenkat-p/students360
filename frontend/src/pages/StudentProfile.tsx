@@ -6,6 +6,8 @@ import {
 import { StudentProfile as StudentProfileType } from '../types';
 import { api } from '../services/api';
 
+import { EditStudentModal } from '../components/forms/EditStudentModal';
+
 interface StudentProfileProps {
   studentId: number;
   onBack: () => void;
@@ -15,20 +17,47 @@ export const StudentProfile: React.FC<StudentProfileProps> = ({ studentId, onBac
   const [profile, setProfile] = useState<StudentProfileType | null>(null);
   const [activeTab, setActiveTab] = useState<'overview' | 'timeline'>('overview');
   const [loading, setLoading] = useState(true);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+
+  const loadProfile = async () => {
+    try {
+      const data = await api.getStudentProfile(studentId);
+      setProfile(data);
+    } catch (err) {
+      console.error('Failed to load profile:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    async function loadProfile() {
-      try {
-        const data = await api.getStudentProfile(studentId);
-        setProfile(data);
-      } catch (err) {
-        console.error('Failed to load profile:', err);
-      } finally {
-        setLoading(false);
-      }
-    }
     loadProfile();
   }, [studentId]);
+
+  const handleArchiveStudent = async () => {
+    if (!profile) return;
+    if (window.confirm(`Archive ${profile.name}? This student will be moved to archived records.`)) {
+      try {
+        await api.updateStudent(profile.id, { status: 'ARCHIVED' });
+        onBack();
+      } catch (err: any) {
+        alert(err.message || 'Failed to archive student');
+      }
+    }
+  };
+
+  const handleDeleteStudent = async () => {
+    if (!profile) return;
+    if (window.confirm(`Remove ${profile.name}? This will permanently remove the student's record and associated academic data.`)) {
+      try {
+        await api.deleteStudent(profile.id);
+        onBack();
+      } catch (err: any) {
+        alert(err.message || 'Failed to delete student');
+      }
+    }
+  };
 
   if (loading || !profile) {
     return (
@@ -80,22 +109,60 @@ export const StudentProfile: React.FC<StudentProfileProps> = ({ studentId, onBac
   ];
 
   return (
-    <div className="bg-slate-50 min-h-screen pb-12">
-      {/* Top Bar matching Reference UI Screen 3 */}
+    <div className="bg-slate-50 min-h-screen pb-12 relative">
+      {/* Top Bar */}
       <div className="bg-indigo-600 text-white px-4 py-3.5 flex items-center justify-between shadow-md">
         <div className="flex items-center space-x-3">
           <button
             onClick={onBack}
-            className="p-1 rounded-full hover:bg-white/10 transition-colors text-white"
+            className="p-1 rounded-full hover:bg-white/10 transition-colors text-white cursor-pointer"
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
           <h1 className="text-base font-bold tracking-tight">Student Profile</h1>
         </div>
-        <button className="p-1 rounded-full hover:bg-white/10 transition-colors text-white">
-          <MoreVertical className="w-5 h-5" />
-        </button>
+
+        <div className="relative">
+          <button
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+            className="p-1 rounded-full hover:bg-white/10 transition-colors text-white cursor-pointer"
+          >
+            <MoreVertical className="w-5 h-5" />
+          </button>
+
+          {isMenuOpen && (
+            <div className="absolute right-0 mt-2 w-48 bg-white rounded-2xl shadow-xl border border-slate-100 py-1.5 z-30 text-slate-700 animate-in fade-in duration-150">
+              <button
+                onClick={() => { setIsMenuOpen(false); setIsEditModalOpen(true); }}
+                className="w-full text-left px-4 py-2 text-xs font-semibold hover:bg-slate-50 flex items-center space-x-2 cursor-pointer"
+              >
+                <span>✏️ Edit Student</span>
+              </button>
+              <button
+                onClick={() => { setIsMenuOpen(false); handleArchiveStudent(); }}
+                className="w-full text-left px-4 py-2 text-xs font-semibold hover:bg-slate-50 text-amber-600 flex items-center space-x-2 cursor-pointer"
+              >
+                <span>📁 Archive Student</span>
+              </button>
+              <div className="border-t border-slate-100 my-1" />
+              <button
+                onClick={() => { setIsMenuOpen(false); handleDeleteStudent(); }}
+                className="w-full text-left px-4 py-2 text-xs font-semibold hover:bg-rose-50 text-rose-600 flex items-center space-x-2 cursor-pointer"
+              >
+                <span>🗑️ Remove Student</span>
+              </button>
+            </div>
+          )}
+        </div>
       </div>
+
+      <EditStudentModal
+        isOpen={isEditModalOpen}
+        student={profile}
+        onClose={() => setIsEditModalOpen(false)}
+        onSuccess={loadProfile}
+      />
+
 
       <div className="p-4 space-y-4">
         {/* Profile Card matching Screen 3 Header */}
@@ -294,7 +361,7 @@ export const StudentProfile: React.FC<StudentProfileProps> = ({ studentId, onBac
                           {act.evidence_files.map((ef) => (
                             <a
                               key={ef.id}
-                              href={`/api/v1/evidence/file/${ef.id}`}
+                              href={api.getEvidenceFileUrl(ef.id)}
                               target="_blank"
                               rel="noreferrer"
                               className="text-[11px] font-bold text-indigo-600 hover:underline block truncate"

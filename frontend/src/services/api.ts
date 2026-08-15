@@ -1,9 +1,9 @@
-import { 
+import type { 
   DashboardSummary, AttentionStudent, ClassInsights, Student, StudentProfile, 
   Activity, Material 
 } from '../types';
 
-const API_BASE = '/api/v1';
+const API_BASE = import.meta.env.VITE_API_URL || '/api/v1';
 
 export async function fetchApi<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
   const token = localStorage.getItem('student360_token');
@@ -34,6 +34,29 @@ export async function fetchApi<T>(endpoint: string, options: RequestInit = {}): 
 }
 
 export const api = {
+  // Auth & Profile
+  login: (credentials: { email: string; password: string }) => fetchApi<any>('/auth/login', {
+    method: 'POST',
+    body: JSON.stringify(credentials),
+  }),
+
+  signup: (data: any) => fetchApi<any>('/auth/signup', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  }),
+
+  getTeacherProfile: () => fetchApi<any>('/auth/me'),
+
+  updateTeacherProfile: (profile: any) => fetchApi<any>('/auth/profile', {
+    method: 'PUT',
+    body: JSON.stringify(profile),
+  }),
+
+  uploadTeacherAvatar: (formData: FormData) => fetchApi<any>('/auth/avatar', {
+    method: 'POST',
+    body: formData,
+  }),
+
   // Dashboard
   getDashboardSummary: () => fetchApi<DashboardSummary>('/dashboard/summary'),
   getAttentionStudents: () => fetchApi<AttentionStudent[]>('/dashboard/attention'),
@@ -54,6 +77,15 @@ export const api = {
   createStudent: (student: Partial<Student>) => fetchApi<Student>('/students', {
     method: 'POST',
     body: JSON.stringify(student),
+  }),
+
+  updateStudent: (id: number, student: Partial<Student>) => fetchApi<Student>(`/students/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(student),
+  }),
+
+  deleteStudent: (id: number) => fetchApi<{ message: string; id: number }>(`/students/${id}`, {
+    method: 'DELETE',
   }),
 
   // Activities Quick Actions
@@ -104,8 +136,16 @@ export const api = {
     body: formData,
   }),
 
-  // Reports
-  getStudentReportPdfUrl: (studentId: number) => `/api/v1/reports/student/${studentId}/pdf`,
-  getClassSummaryPdfUrl: () => `/api/v1/reports/class/summary/pdf`,
-  getExportCsvUrl: () => `/api/v1/reports/export/csv`,
+  // Attendance
+  markAttendance: (batchData: any) => fetchApi<any>('/attendance/batch', {
+    method: 'POST',
+    body: JSON.stringify(batchData),
+  }),
+
+  // Reports & Files
+  getStudentReportPdfUrl: (studentId: number) => `${API_BASE}/reports/student/${studentId}/pdf`,
+  getClassSummaryPdfUrl: () => `${API_BASE}/reports/class/summary/pdf`,
+  getExportCsvUrl: () => `${API_BASE}/reports/export/csv`,
+  getEvidenceFileUrl: (fileId: number) => `${API_BASE}/evidence/file/${fileId}`,
 };
+

@@ -15,6 +15,7 @@ class StudentStatus(str, enum.Enum):
     GOOD = "GOOD"
     NEEDS_ATTENTION = "NEEDS_ATTENTION"
     CRITICAL = "CRITICAL"
+    ARCHIVED = "ARCHIVED"
 
 class ActivityType(str, enum.Enum):
     SEMINAR = "SEMINAR"

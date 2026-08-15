@@ -145,3 +145,13 @@ export interface ClassInsights {
   pbl_rate: number;
   pgl_rate: number;
 }
+
+// Runtime dummy object exports for JS bundling compatibility
+export const TYPES_MODULE = 'STUDENT360_TYPES';
+export const DashboardSummary = {};
+export const AttentionStudent = {};
+export const ClassInsights = {};
+export const Student = {};
+export const StudentProfile = {};
+export const Activity = {};
+export const Material = {};

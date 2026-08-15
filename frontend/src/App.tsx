@@ -4,40 +4,123 @@ import { Students } from './pages/Students';
 import { StudentProfile } from './pages/StudentProfile';
 import { Materials } from './pages/Materials';
 import { Reports } from './pages/Reports';
+import { Login } from './pages/Login';
 import { BottomNav } from './components/layout/BottomNav';
+import { DesktopSidebar } from './components/layout/DesktopSidebar';
 import { QuickAddMenuModal } from './components/forms/QuickAddMenuModal';
-import { AddSeminarModal } from './components/forms/AddSeminarModal';
-import { Student } from './types';
+import { AddStudentModal } from './components/forms/AddStudentModal';
+import { AddActivityModal } from './components/forms/AddActivityModal';
+import { MarkAttendanceModal } from './components/forms/MarkAttendanceModal';
+import { AccountProfileModal } from './components/profile/AccountProfileModal';
+import type { Student } from './types';
 import { api } from './services/api';
 
 export function App() {
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
+    return !!localStorage.getItem('student360_token');
+  });
+
   const [activeTab, setActiveTab] = useState<'dashboard' | 'students' | 'materials' | 'reports'>('dashboard');
   const [selectedStudentId, setSelectedStudentId] = useState<number | null>(null);
   const [students, setStudents] = useState<Student[]>([]);
+  const [loadingAuth, setLoadingAuth] = useState(true);
+
+  // Teacher Profile state
+  const [teacherProfile, setTeacherProfile] = useState({
+    name: 'Md. Shahazadi Begum',
+    designation: 'Lecturer in English',
+    department: 'English',
+    collegeName: 'GDC Ramachandrapuram',
+    employeeCode: 'EMP-2024-ENG',
+    email: 'teacher@student360.edu',
+    avatarUrl: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80',
+  });
 
   // Modals
   const [isQuickMenuOpen, setIsQuickMenuOpen] = useState(false);
-  const [isSeminarModalOpen, setIsSeminarModalOpen] = useState(false);
+  const [isAddStudentModalOpen, setIsAddStudentModalOpen] = useState(false);
+  const [isAddActivityModalOpen, setIsAddActivityModalOpen] = useState(false);
+  const [activityModalType, setActivityModalType] = useState<'seminar' | 'assignment' | 'pbl' | 'pgl' | 'activity'>('seminar');
+  const [isAttendanceModalOpen, setIsAttendanceModalOpen] = useState(false);
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+
+  const loadInitialData = async () => {
+    const token = localStorage.getItem('student360_token');
+    if (!token) {
+      setIsAuthenticated(false);
+      setLoadingAuth(false);
+      return;
+    }
+
+    try {
+      const [studentData, teacherRes] = await Promise.all([
+        api.getStudents(),
+        api.getTeacherProfile().catch(() => null),
+      ]);
+
+      setStudents(studentData);
+
+      if (teacherRes && teacherRes.user) {
+        setTeacherProfile({
+          name: teacherRes.user.full_name,
+          designation: teacherRes.designation || 'Lecturer in English',
+          department: teacherRes.department || 'English',
+          collegeName: teacherRes.college_name || 'GDC Ramachandrapuram',
+          employeeCode: teacherRes.employee_code || `EMP-${teacherRes.user.id}`,
+          email: teacherRes.user.email,
+          avatarUrl: teacherRes.user.avatar_url || 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80',
+        });
+      }
+
+      setIsAuthenticated(true);
+    } catch (err) {
+      console.error('Auth verification failed:', err);
+      localStorage.removeItem('student360_token');
+      setIsAuthenticated(false);
+    } finally {
+      setLoadingAuth(false);
+    }
+  };
 
   useEffect(() => {
-    async function fetchStudents() {
-      try {
-        const data = await api.getStudents();
-        setStudents(data);
-      } catch (err) {
-        console.error('Failed to fetch students:', err);
-      }
-    }
-    fetchStudents();
-  }, []);
+    loadInitialData();
+  }, [isAuthenticated]);
+
+  const handleAuthSuccess = (_token: string, _user: any) => {
+    setIsAuthenticated(true);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('student360_token');
+    setIsAuthenticated(false);
+    setSelectedStudentId(null);
+    setActiveTab('dashboard');
+  };
 
   const handleSelectStudent = (id: number) => {
     setSelectedStudentId(id);
   };
 
   const handleOpenAction = (action: string) => {
-    if (action === 'seminar') {
-      setIsSeminarModalOpen(true);
+    if (action === 'add_student') {
+      setIsAddStudentModalOpen(true);
+    } else if (action === 'seminar') {
+      setActivityModalType('seminar');
+      setIsAddActivityModalOpen(true);
+    } else if (action === 'assignment') {
+      setActivityModalType('assignment');
+      setIsAddActivityModalOpen(true);
+    } else if (action === 'pbl') {
+      setActivityModalType('pbl');
+      setIsAddActivityModalOpen(true);
+    } else if (action === 'pgl') {
+      setActivityModalType('pgl');
+      setIsAddActivityModalOpen(true);
+    } else if (action === 'activity') {
+      setActivityModalType('activity');
+      setIsAddActivityModalOpen(true);
+    } else if (action === 'attendance') {
+      setIsAttendanceModalOpen(true);
     } else if (action === 'students') {
       setActiveTab('students');
       setSelectedStudentId(null);
@@ -46,16 +129,49 @@ export function App() {
     } else if (action === 'material') {
       setActiveTab('materials');
     } else {
-      setIsSeminarModalOpen(true);
+      setActivityModalType('seminar');
+      setIsAddActivityModalOpen(true);
     }
   };
+
+  const handleProfileUpdateSuccess = (updated: any) => {
+    if (updated) {
+      setTeacherProfile((prev) => ({
+        ...prev,
+        name: updated.user?.full_name || prev.name,
+        designation: updated.designation || prev.designation,
+        department: updated.department || prev.department,
+        collegeName: updated.college_name || prev.collegeName,
+        employeeCode: updated.employee_code || prev.employeeCode,
+        email: updated.user?.email || prev.email,
+        avatarUrl: updated.user?.avatar_url || prev.avatarUrl,
+      }));
+    }
+  };
+
+  // Route Protection
+  if (loadingAuth) {
+    return (
+      <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center text-white p-4">
+        <div className="w-12 h-12 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mb-4" />
+        <p className="text-xs font-bold text-indigo-300">Initializing Student360 Application...</p>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return <Login onAuthSuccess={handleAuthSuccess} />;
+  }
 
   const renderCurrentView = () => {
     if (selectedStudentId !== null) {
       return (
         <StudentProfile
           studentId={selectedStudentId}
-          onBack={() => setSelectedStudentId(null)}
+          onBack={() => {
+            setSelectedStudentId(null);
+            loadInitialData();
+          }}
         />
       );
     }
@@ -66,64 +182,113 @@ export function App() {
           <Dashboard
             onOpenAction={handleOpenAction}
             onSelectStudent={handleSelectStudent}
+            onOpenProfile={() => setIsProfileModalOpen(true)}
+            avatarUrl={teacherProfile.avatarUrl}
+            teacherName={teacherProfile.name}
+            designation={teacherProfile.designation}
+            collegeName={teacherProfile.collegeName}
           />
         );
       case 'students':
         return (
           <Students
             onSelectStudent={handleSelectStudent}
-            onAddStudent={() => setIsSeminarModalOpen(true)}
+            onAddStudent={() => setIsAddStudentModalOpen(true)}
           />
         );
       case 'materials':
-        return <Materials onUploadClick={() => setIsSeminarModalOpen(true)} />;
+        return <Materials onUploadClick={() => handleOpenAction('material')} />;
       case 'reports':
         return <Reports />;
       default:
-        return <Dashboard onOpenAction={handleOpenAction} onSelectStudent={handleSelectStudent} />;
+        return (
+          <Dashboard
+            onOpenAction={handleOpenAction}
+            onSelectStudent={handleSelectStudent}
+            onOpenProfile={() => setIsProfileModalOpen(true)}
+            avatarUrl={teacherProfile.avatarUrl}
+            teacherName={teacherProfile.name}
+            designation={teacherProfile.designation}
+            collegeName={teacherProfile.collegeName}
+          />
+        );
     }
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 flex items-center justify-center p-0 md:py-6">
-      {/* Outer Device Shell / Frame */}
-      <div className="mobile-frame rounded-none md:rounded-[40px] overflow-hidden border-0 md:border-[10px] md:border-slate-800 shadow-2xl relative flex flex-col w-full max-w-[480px]">
-        
-        {/* Main Content Area */}
-        <main className="flex-1 overflow-y-auto bg-slate-50">
+    <div className="min-h-screen bg-slate-100 flex w-full">
+      {/* Desktop Navigation Sidebar */}
+      <DesktopSidebar
+        activeTab={activeTab}
+        teacherName={teacherProfile.name}
+        designation={teacherProfile.designation}
+        avatarUrl={teacherProfile.avatarUrl}
+        onSelectTab={(tab) => {
+          setSelectedStudentId(null);
+          setActiveTab(tab);
+        }}
+        onOpenQuickAdd={() => setIsQuickMenuOpen(true)}
+        onOpenProfile={() => setIsProfileModalOpen(true)}
+      />
+
+      {/* Main Full-Width Application Content Container */}
+      <div className="flex-1 flex flex-col min-w-0 min-h-screen">
+        <main className="flex-1 p-4 md:p-8 max-w-7xl w-full mx-auto">
           {renderCurrentView()}
         </main>
 
-        {/* Bottom Navigation */}
-        <BottomNav
-          activeTab={activeTab}
-          onSelectTab={(tab) => {
-            setSelectedStudentId(null);
-            setActiveTab(tab);
-          }}
-          onOpenQuickAdd={() => setIsQuickMenuOpen(true)}
-        />
-
-        {/* Floating Quick Action Selection Modal */}
-        <QuickAddMenuModal
-          isOpen={isQuickMenuOpen}
-          onClose={() => setIsQuickMenuOpen(false)}
-          onSelectAction={handleOpenAction}
-        />
-
-        {/* Add Seminar Form Modal (Screen 4 exact match) */}
-        <AddSeminarModal
-          isOpen={isSeminarModalOpen}
-          students={students}
-          onClose={() => setIsSeminarModalOpen(false)}
-          onSuccess={() => {
-            // refresh data
-            if (activeTab === 'dashboard') {
-              setActiveTab('dashboard');
-            }
-          }}
-        />
+        {/* Mobile Bottom Navigation */}
+        <div className="md:hidden">
+          <BottomNav
+            activeTab={activeTab}
+            onSelectTab={(tab) => {
+              setSelectedStudentId(null);
+              setActiveTab(tab);
+            }}
+            onOpenQuickAdd={() => setIsQuickMenuOpen(true)}
+          />
+        </div>
       </div>
+
+      {/* Quick Action Selection Modal */}
+      <QuickAddMenuModal
+        isOpen={isQuickMenuOpen}
+        onClose={() => setIsQuickMenuOpen(false)}
+        onSelectAction={handleOpenAction}
+      />
+
+      {/* Add Student Modal */}
+      <AddStudentModal
+        isOpen={isAddStudentModalOpen}
+        onClose={() => setIsAddStudentModalOpen(false)}
+        onSuccess={loadInitialData}
+      />
+
+      {/* Add Activity Form Modal */}
+      <AddActivityModal
+        isOpen={isAddActivityModalOpen}
+        initialType={activityModalType}
+        students={students}
+        onClose={() => setIsAddActivityModalOpen(false)}
+        onSuccess={loadInitialData}
+      />
+
+      {/* Batch Attendance Modal */}
+      <MarkAttendanceModal
+        isOpen={isAttendanceModalOpen}
+        students={students}
+        onClose={() => setIsAttendanceModalOpen(false)}
+        onSuccess={loadInitialData}
+      />
+
+      {/* Account & Profile Modal */}
+      <AccountProfileModal
+        isOpen={isProfileModalOpen}
+        onClose={() => setIsProfileModalOpen(false)}
+        teacherData={teacherProfile}
+        onUpdateSuccess={handleProfileUpdateSuccess}
+        onLogout={handleLogout}
+      />
     </div>
   );
 }

@@ -15,6 +15,15 @@ class LoginRequest(BaseModel):
     email: EmailStr
     password: str
 
+class SignUpRequest(BaseModel):
+    full_name: str
+    email: EmailStr
+    password: str
+    designation: Optional[str] = "Lecturer in English"
+    department: Optional[str] = "English"
+    college_name: Optional[str] = "GDC Ramachandrapuram"
+    employee_code: Optional[str] = None
+
 # User & Teacher
 class UserOut(BaseModel):
     id: int
@@ -37,6 +46,15 @@ class TeacherOut(BaseModel):
 
     class Config:
         from_attributes = True
+
+class TeacherProfileUpdate(BaseModel):
+    full_name: Optional[str] = None
+    designation: Optional[str] = None
+    department: Optional[str] = None
+    college_name: Optional[str] = None
+    employee_code: Optional[str] = None
+    email: Optional[str] = None
+    avatar_url: Optional[str] = None
 
 # Evidence
 class EvidenceFileOut(BaseModel):
